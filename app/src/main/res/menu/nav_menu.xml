@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/face_recognition"
+            android:title="@string/face_recognition" />
+        <item
+            android:id="@+id/character_recognition"
+            android:title="@string/character_recognition" />
+        <item
+            android:id="@+id/object_recognition"
+            android:title="@string/object_recognition" />
+        <item
+            android:id="@+id/ar_camera"
+            android:title="@string/ar_camera" />
+    </group>
+</menu>

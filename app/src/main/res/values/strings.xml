@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">AI Camera</string>
+    <string name="face_recognition">Face Recognition</string>
+    <string name="character_recognition">Character Recognition</string>
+    <string name="object_recognition">Object Recognition</string>
+    <string name="ar_camera">AR Camera</string>
+    <string name="take_photo">Take Photo</string>
+    <string name="save_failed">保存失败</string>
+    <string name="picture">拍照</string>
+    <string name="need_permissions">该App需要打开摄像头拍照，并保存到设备上</string>
+    <string name="sorry">很抱歉，由于未被赋予相应权限，“Picture”停止运行</string>
+    <string name="failed">配置失败</string>
+</resources>
