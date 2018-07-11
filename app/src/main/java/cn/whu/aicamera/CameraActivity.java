@@ -140,8 +140,8 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
         mCameraView =  (CameraView) findViewById(R.id.camera_view);
         mCameraView.gerRenderer().setActivity(this);
 
-        mButton = (Button) findViewById(R.id.take_photo);
-        mButton.setOnClickListener(this);
+        //mButton = (Button) findViewById(R.id.take_photo);
+        //mButton.setOnClickListener(this);
 
         mNavigationView=(NavigationView)findViewById(R.id.nav_view);
         mNavigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
@@ -190,11 +190,11 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
 
     @Override
     public void onClick(View view) {
-        switch (view.getId()) {
+        /*switch (view.getId()) {
             case R.id.take_photo:
                 takePicture();//拍照
                 break;
-        }
+        }*/
     }
 
     /**
