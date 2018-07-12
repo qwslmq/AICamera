@@ -46,6 +46,7 @@ import java.util.concurrent.TimeUnit;
 
 import cn.whu.aicamera.Utils.FileUtil;
 import cn.whu.aicamera.Utils.PermissionUtil;
+import cn.whu.aicamera.character_recognition.CharacterRecognition;
 import cn.whu.object_recognition.ObjectRecognition;
 
 
@@ -133,8 +134,7 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
                     mRecognitionResult = FaceRecognition.recognize(bytes);
                     break;
                 case CHARACTER_RECOGNITION:
-                    mRecognitionResult = "CHARACTER_RECOGNITION";
-                    //to do
+                    mRecognitionResult = CharacterRecognition.recognize(bytes);
 
                     break;
                 case OBJECT_RECOGNITION:
