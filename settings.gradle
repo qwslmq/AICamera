@@ -1,1 +1,1 @@
-include ':app', ':ocr'
+include ':app', ':ocr',':object_recognition'
