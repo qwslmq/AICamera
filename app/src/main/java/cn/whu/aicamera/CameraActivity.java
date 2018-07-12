@@ -3,7 +3,6 @@ package cn.whu.aicamera;
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.ImageFormat;
 import android.graphics.SurfaceTexture;
@@ -21,22 +20,21 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.util.Size;
 import android.util.SparseIntArray;
 import android.view.MenuItem;
 import android.view.Surface;
 import android.view.View;
-import android.view.WindowManager;
-import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -46,6 +44,7 @@ import java.util.concurrent.TimeUnit;
 
 import cn.whu.aicamera.Utils.FileUtil;
 import cn.whu.aicamera.Utils.PermissionUtil;
+import cn.whu.object_recognition.ObjectRecognition;
 
 
 public class CameraActivity extends AppCompatActivity implements View.OnClickListener, ActivityCompat.OnRequestPermissionsResultCallback {
@@ -57,7 +56,9 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
             Manifest.permission.CAMERA,
             Manifest.permission.WRITE_EXTERNAL_STORAGE
     };
-
+    private static final int FACE_RECOGNITION = 0;
+    private static final int CHARACTER_RECOGNITION = 1;
+    private static final int OBJECT_RECOGNITION =3;
     //Sensor方向，大多数设备是90度
     private static final int SENSOR_ORIENTATION_DEFAULT_DEGREES = 90;
     //Sensor方向，一些设备是270度
@@ -80,31 +81,74 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
         INVERSE_ORIENTATIONS.append(Surface.ROTATION_180, 90);
         INVERSE_ORIENTATIONS.append(Surface.ROTATION_270, 0);
     }
-    private SurfaceTexture surfaceTexture;
+
+    private SurfaceTexture mSurfaceTexture;
     private CameraView mCameraView;
-    private Button mButton;
+    private ImageReader mImageReader;//用于接收拍照图片
+    private TextView mTextView;
+    private int mRecognitionOption = OBJECT_RECOGNITION;
+    private String mRecognitionResult = null;
+
+    private CaptureRequest.Builder mPreviewRequestBuilder;//预览请求的CaptureRequest.Builder对象
+    private CameraDevice mCameraDevice;//代表摄像头的成员变量
+    private CameraCaptureSession mCameraCaptureSession;//定义CameraCaptureSession成员变量
     private Size mPreviewSize;//预览大小
     private Integer mSensorOrientation;//Sensor方向
     private Semaphore mCameraLock = new Semaphore(1);//Camera互斥锁
     private String mCameraId;//摄像头ID（通常0代表后置摄像头，1代表前置摄像头）
-    private CameraDevice mCameraDevice;//代表摄像头的成员变量
-    private CameraCaptureSession mCameraCaptureSession;//定义CameraCaptureSession成员变量
-    private HandlerThread mBackgroundThread;//定义后台线程
-    private Handler mBackgroundHandler;//定义后台线程的Handler
-    private CaptureRequest.Builder mPreviewRequestBuilder;//预览请求的CaptureRequest.Builder对象
     private File mDir;//存放图片的父目录
     private File mFile;//图片的保存位置
     private Boolean mFlashSupported;//是否支持闪光灯
-    private ImageReader mImageReader;//用于保存图片的ImageReader对象
-    private NavigationView mNavigationView;
+
+    private HandlerThread mCameraThread;//负责相机操作
+    private Handler mCameraHandler;
+    private HandlerThread mRecognitionThread;//负责图片识别
+    private Handler mRecognitionHandler;
+
+
+    Runnable handleRecognition = new Runnable() {
+        @Override
+        public void run() {
+            takePicture();
+            mRecognitionHandler.postDelayed(this, 2000);
+        }
+    };
+
+    /**
+     * 在这调用你们的接口
+     */
     private ImageReader.OnImageAvailableListener mOnImageAvailableListener = new ImageReader.OnImageAvailableListener() {
         @Override
         public void onImageAvailable(ImageReader reader) {
             //获取捕获的照片数据
             Image image = reader.acquireNextImage();
+            ByteBuffer buffer = image.getPlanes()[0].getBuffer();
+            byte[] bytes = new byte[buffer.remaining()];
+            buffer.get(bytes);
+            image.close();
+            switch (mRecognitionOption){
+                case FACE_RECOGNITION:
+                    mRecognitionResult = "FACE_RECOGNITION";
+                    //to do
 
-            Log.i(TAG, mFile.toString());
-            mBackgroundHandler.post(new FileUtil(CameraActivity.this, image, mFile));
+                    break;
+                case CHARACTER_RECOGNITION:
+                    mRecognitionResult = "CHARACTER_RECOGNITION";
+                    //to do
+
+                    break;
+                case OBJECT_RECOGNITION:
+                    mRecognitionResult = ObjectRecognition.recognize(bytes);
+                    break;
+                default:
+                    break;
+            }
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mTextView.setText(mRecognitionResult);
+                }
+            });
         }
     };
 
@@ -136,29 +180,41 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera);
+        if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
+            mDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_ALARMS);
+        }
+        initView();
+    }
+
+    private void initView(){
+        mTextView = (TextView)findViewById(R.id.show_result);
 
         mCameraView =  (CameraView) findViewById(R.id.camera_view);
         mCameraView.gerRenderer().setActivity(this);
-
-        //mButton = (Button) findViewById(R.id.take_photo);
-        //mButton.setOnClickListener(this);
-
-        mNavigationView=(NavigationView)findViewById(R.id.nav_view);
+        final DrawerLayout drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        NavigationView mNavigationView=(NavigationView)findViewById(R.id.nav_view);
         mNavigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                 switch (item.getItemId()){
                     case R.id.face_recognition:
                         Toast.makeText(CameraActivity.this, R.string.face_recognition, Toast.LENGTH_SHORT).show();
+                        mRecognitionOption = FACE_RECOGNITION;
+                        drawerLayout.closeDrawers();
                         break;
                     case R.id.character_recognition:
                         Toast.makeText(CameraActivity.this, R.string.character_recognition, Toast.LENGTH_SHORT).show();
+                        mRecognitionOption = CHARACTER_RECOGNITION;
+                        drawerLayout.closeDrawers();
                         break;
                     case R.id.object_recognition:
                         Toast.makeText(CameraActivity.this, R.string.object_recognition, Toast.LENGTH_SHORT).show();
+                        mRecognitionOption = OBJECT_RECOGNITION;
+                        drawerLayout.closeDrawers();
                         break;
                     case R.id.ar_camera:
                         Toast.makeText(CameraActivity.this, R.string.ar_camera, Toast.LENGTH_SHORT).show();
+                        drawerLayout.closeDrawers();
                         break;
                     default:
                         break;
@@ -166,10 +222,6 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
                 return true;
             }
         });
-
-        if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
-            mDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_ALARMS);
-        }
     }
 
     @Override
@@ -177,6 +229,12 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
         super.onResume();
         //开启后台线程
         startBackgroundThread();
+    }
+
+    @Override
+    protected void onRestart(){
+        super.onRestart();
+        openCamera(mSurfaceTexture);
     }
 
     @Override
@@ -202,7 +260,8 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
      */
     @SuppressWarnings("MissingPermission")
     public void openCamera(SurfaceTexture _surfaceTexture) {
-        surfaceTexture = _surfaceTexture;
+        if(_surfaceTexture == null) return;
+        mSurfaceTexture = _surfaceTexture;
         PermissionUtil permissionUtil = new PermissionUtil(this);
         //若没有权限
         if (!permissionUtil.hasPermissionGranted(PICTURE_PERMISSIONS)) {
@@ -224,7 +283,7 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
             }
 
             //打开Camera
-            cameraManager.openCamera(mCameraId, mCameraDeviceStateCallback, mBackgroundHandler);
+            cameraManager.openCamera(mCameraId, mCameraDeviceStateCallback, mCameraHandler);
 
         } catch (InterruptedException e) {
             throw new RuntimeException("打开相机时中断");
@@ -261,7 +320,7 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
                 Size largest = Collections.max(Arrays.asList(map.getOutputSizes(ImageFormat.JPEG)), new CompareSizeByArea());
                 //创建一个ImageReader对象，用于获取摄像头的图像数据。设置图片大小为largest
                 mImageReader = ImageReader.newInstance(largest.getWidth()/4, largest.getHeight()/4, ImageFormat.JPEG, 2);
-                mImageReader.setOnImageAvailableListener(mOnImageAvailableListener, mBackgroundHandler);
+                mImageReader.setOnImageAvailableListener(mOnImageAvailableListener, mRecognitionHandler);
 
                 mPreviewSize = chooseOptimalSize(map.getOutputSizes(SurfaceTexture.class), mCameraView.getWidth(), mCameraView.getHeight(), largest);
 
@@ -281,9 +340,8 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
      * 开始预览
      */
     private void startPreview() {
-        //设置预览大小
-        surfaceTexture.setDefaultBufferSize(mPreviewSize.getWidth(), mPreviewSize.getHeight());
-        Surface surface = new Surface(surfaceTexture);
+        mSurfaceTexture.setDefaultBufferSize(mPreviewSize.getWidth(), mPreviewSize.getHeight());
+        Surface surface = new Surface(mSurfaceTexture);
         try {
             //创建作为预览的CaptureRequest.Builder对象
             mPreviewRequestBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
@@ -299,13 +357,14 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
                     }
                     mCameraCaptureSession = cameraCaptureSession;
                     updatePreview();//更新预览
+                    mRecognitionHandler.postDelayed(handleRecognition, 2000);
                 }
 
                 @Override
                 public void onConfigureFailed(@NonNull CameraCaptureSession cameraCaptureSession) {
                     Toast.makeText(CameraActivity.this, R.string.failed, Toast.LENGTH_SHORT).show();
                 }
-            }, mBackgroundHandler);
+            }, mCameraHandler);
         } catch (CameraAccessException e) {
             e.printStackTrace();
         }
@@ -318,12 +377,12 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
         //设置CaptureRequest.Builder对象
         setBuilder(mPreviewRequestBuilder);
 
-        mBackgroundHandler.post(new Runnable() {
+        mCameraHandler.post(new Runnable() {
             @Override
             public void run() {
                 try {
                     //预览
-                    mCameraCaptureSession.setRepeatingRequest(mPreviewRequestBuilder.build(), null, mBackgroundHandler);
+                    mCameraCaptureSession.setRepeatingRequest(mPreviewRequestBuilder.build(), null, mCameraHandler);
                 } catch (CameraAccessException e) {
                     throw new RuntimeException("无法访问相机");
                 }
@@ -372,20 +431,28 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
      * 开启后台线程
      */
     private void startBackgroundThread() {
-        mBackgroundThread = new HandlerThread("CameraBackground");
-        mBackgroundThread.start();
-        mBackgroundHandler = new Handler(mBackgroundThread.getLooper());
+        mCameraThread = new HandlerThread("CameraThread");
+        mCameraThread.start();
+        mCameraHandler = new Handler(mCameraThread.getLooper());
+
+        mRecognitionThread = new HandlerThread("RecognitionThread");
+        mRecognitionThread.start();
+        mRecognitionHandler = new Handler(mRecognitionThread.getLooper());
     }
 
     /**
      * 停止后台线程
      */
     private void stopBackgroundThread() {
-        mBackgroundThread.quitSafely();
+        mCameraThread.quitSafely();
+        mRecognitionThread.quitSafely();
         try {
-            mBackgroundThread.join();
-            mBackgroundThread = null;
-            mBackgroundHandler = null;
+            mCameraThread.join();
+            mRecognitionThread.join();
+            mCameraThread = null;
+            mCameraHandler = null;
+            mRecognitionThread = null;
+            mRecognitionHandler = null;
         } catch (InterruptedException e) {
             throw new RuntimeException("停止后台线程时中断");
         }
@@ -466,14 +533,14 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
                 //在拍照完成时调用
                 @Override
                 public void onCaptureCompleted(@NonNull CameraCaptureSession session, @NonNull CaptureRequest request, @NonNull TotalCaptureResult result) {
-                    Toast.makeText(CameraActivity.this, "保存到：" + mFile.toString(), Toast.LENGTH_SHORT).show();
-                    //updatePreview();//继续预览
+                    ///Toast.makeText(CameraActivity.this, "保存到：" + mFile.toString(), Toast.LENGTH_SHORT).show();
+                    updatePreview();//继续预览
                 }
             };
             //停止连续取景
             mCameraCaptureSession.stopRepeating();
             //捕获静态图像
-            mCameraCaptureSession.capture(captureRequestBuilder.build(), captureCallback, mBackgroundHandler);
+            mCameraCaptureSession.capture(captureRequestBuilder.build(), captureCallback, mCameraHandler);
         } catch (CameraAccessException e) {
             e.printStackTrace();
         }
@@ -494,7 +561,7 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
                             break;
                         }
                     }
-                    openCamera(surfaceTexture);
+                    openCamera(mSurfaceTexture);
                 } else {
                     stopApp(this);
                 }
