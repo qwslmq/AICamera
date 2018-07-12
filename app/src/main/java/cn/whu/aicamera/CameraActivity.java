@@ -33,6 +33,8 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.whu.aicamera.ocr.CharacterRecognition;
+
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -133,8 +135,7 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
 
                     break;
                 case CHARACTER_RECOGNITION:
-                    mRecognitionResult = "CHARACTER_RECOGNITION";
-                    //to do
+                    mRecognitionResult = CharacterRecognition.recognize(bytes);
 
                     break;
                 case OBJECT_RECOGNITION:
