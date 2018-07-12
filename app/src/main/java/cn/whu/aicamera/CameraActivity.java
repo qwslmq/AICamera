@@ -340,6 +340,7 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
      * 开始预览
      */
     private void startPreview() {
+        mSurfaceTexture.setDefaultBufferSize(mPreviewSize.getWidth(), mPreviewSize.getHeight());
         Surface surface = new Surface(mSurfaceTexture);
         try {
             //创建作为预览的CaptureRequest.Builder对象
