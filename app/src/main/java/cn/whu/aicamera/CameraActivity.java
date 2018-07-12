@@ -33,6 +33,8 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.face_recognition.FaceRecognition;
+
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -128,9 +130,7 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
             image.close();
             switch (mRecognitionOption){
                 case FACE_RECOGNITION:
-                    mRecognitionResult = "FACE_RECOGNITION";
-                    //to do
-
+                    mRecognitionResult = FaceRecognition.recognize(bytes);
                     break;
                 case CHARACTER_RECOGNITION:
                     mRecognitionResult = "CHARACTER_RECOGNITION";
