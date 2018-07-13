@@ -176,6 +176,9 @@ public class CameraHandler {
     protected void closeCamera() {
         try {
             mCameraOpenCloseLock.acquire();
+            mCaptureReader.getSurface().release();
+            mCaptureReader.close();
+            mCaptureReader = null;
             if (null != mCaptureSession) {
                 mCaptureSession.close();
                 mCaptureSession = null;

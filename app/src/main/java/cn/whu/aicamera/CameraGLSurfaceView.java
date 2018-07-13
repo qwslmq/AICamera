@@ -36,7 +36,7 @@ public class CameraGLSurfaceView extends GLSurfaceView{
     private Size previewSize = null;
     private ImageReader.OnImageAvailableListener onImageAvailableListener;
     private Bitmap rgbFrameBitmap = null;
-    private boolean isFront;
+    private boolean isFront = true;
 
     public CameraGLSurfaceView(Context context, boolean syncPreviewAndImageProcess, Size desiredResolution) {
         super ( context);
