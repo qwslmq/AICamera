@@ -174,8 +174,8 @@ public class CameraActivity extends FragmentActivity implements PermissionsHelpe
     @Override
     protected void onPause() {
         mCameraGLSurfaceView.onPause();
-        bytes = null;
         stopBackgroundThread();
+        bytes = null;
         super.onPause();
     }
 
