@@ -13,6 +13,10 @@ public class ClientUtil {
     public static final String APP_ID = "11528113";
     public static final String API_KEY = "Wt5gGEz7XImQpBqjk9aSsYKN";
     public static final String SECRET_KEY = "GuDBV7S1RtKAWqpVWtrKDLi1GNeWuw2c";
+
+    /**
+     * 获取client的实例
+     */
     public static void getClient(){
         // 初始化一个AipOcr
         CharacterRecognition.client = new AipOcr(APP_ID, API_KEY, SECRET_KEY);
