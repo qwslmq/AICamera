@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">AI Camera</string>
+    <string name="change_camera_facing">Change Camera Facing</string>
     <string name="face_recognition">Face Recognition</string>
     <string name="character_recognition">Character Recognition</string>
     <string name="object_recognition">Object Recognition</string>
