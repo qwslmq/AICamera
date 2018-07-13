@@ -1,6 +1,20 @@
 package cn.whu.aicamera;
 
 import android.Manifest;
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.graphics.ImageFormat;
+import android.graphics.SurfaceTexture;
+import android.hardware.camera2.CameraAccessException;
+import android.hardware.camera2.CameraCaptureSession;
+import android.hardware.camera2.CameraCharacteristics;
+import android.hardware.camera2.CameraDevice;
+import android.hardware.camera2.CameraManager;
+import android.hardware.camera2.CaptureRequest;
+import android.hardware.camera2.TotalCaptureResult;
+import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.Image;
 import android.media.ImageReader;
 import android.os.Bundle;
@@ -15,6 +29,7 @@ import android.view.MenuItem;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.baidu.ardemo.StartActivity;
 import com.example.face_recognition.FaceRecognition;
 
 import java.nio.ByteBuffer;
@@ -124,6 +139,7 @@ public class CameraActivity extends FragmentActivity implements PermissionsHelpe
                         break;
                     case R.id.ar_camera:
                         Toast.makeText(CameraActivity.this, R.string.ar_camera, Toast.LENGTH_SHORT).show();
+                        startAr();
                         drawerLayout.closeDrawers();
                         break;
                     default:
@@ -132,6 +148,13 @@ public class CameraActivity extends FragmentActivity implements PermissionsHelpe
                 return true;
             }
         });
+    }
+
+    //跳转至ar界面
+    private void startAr(){
+        Intent intent = new Intent(CameraActivity.this, StartActivity.class);
+        startActivity(intent);
+
     }
 
     @Override

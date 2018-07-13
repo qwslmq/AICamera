@@ -29,4 +29,5 @@ dependencies {
     implementation project(path: ':object_recognition')
     implementation project(':face_recognition')
     implementation project(path: ':character_recognition')
+    implementation project(':ar')
 }
