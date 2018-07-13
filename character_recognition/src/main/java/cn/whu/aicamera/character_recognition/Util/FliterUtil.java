@@ -21,4 +21,20 @@ public class FliterUtil {
         }
         return words_results.subList(0,subEnd);
     }
+
+    /**
+     * 删除置信度(Average)低于最小置信度的结果
+     * @param words_results 要筛选的对象list
+     * @param MinProbability 最小的置信度
+     * @return 筛选后的list
+     */
+    public static List<Words_result> FliterByMinProbability(List<Words_result> words_results, int MinProbability){
+        for(Words_result words_result:words_results){
+            if(words_result.getProbability().getAverage()<MinProbability){
+                words_results.remove(words_result);
+            }
+        }
+        return words_results;
+    }
+
 }
