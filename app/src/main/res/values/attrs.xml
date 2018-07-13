@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="CameraGLSurfaceView">
+        <attr name="syncPreviewAndImageProcess" format="boolean" />
+        <attr name="desiredWidth" format="integer" />
+        <attr name="desiredHeight" format="integer" />
+    </declare-styleable>
+</resources>
