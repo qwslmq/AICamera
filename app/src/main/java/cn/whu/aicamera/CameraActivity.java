@@ -3,6 +3,7 @@ package cn.whu.aicamera;
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.ImageFormat;
 import android.graphics.SurfaceTexture;
@@ -33,6 +34,7 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.baidu.ardemo.StartActivity;
 import com.example.face_recognition.FaceRecognition;
 
 import java.io.File;
@@ -214,6 +216,7 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
                         break;
                     case R.id.ar_camera:
                         Toast.makeText(CameraActivity.this, R.string.ar_camera, Toast.LENGTH_SHORT).show();
+                        startAr();
                         drawerLayout.closeDrawers();
                         break;
                     default:
@@ -222,6 +225,13 @@ public class CameraActivity extends AppCompatActivity implements View.OnClickLis
                 return true;
             }
         });
+    }
+
+    //跳转至ar界面
+    private void startAr(){
+        Intent intent = new Intent(CameraActivity.this, StartActivity.class);
+        startActivity(intent);
+
     }
 
     @Override

@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">AR</string>
+
+    <string name="ar_name1">单目SLAM</string>
+    <string name="ar_name2">IMU</string>
+
+</resources>
