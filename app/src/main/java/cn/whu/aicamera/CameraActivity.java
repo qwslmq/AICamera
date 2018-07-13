@@ -186,7 +186,7 @@ public class CameraActivity extends FragmentActivity implements PermissionsHelpe
     }
 
     protected void stopBackgroundThread() {
-        mBackgroundThread.quitSafely();
+        mBackgroundThread.quit();
         try {
             mBackgroundThread.join();
             mBackgroundThread = null;
