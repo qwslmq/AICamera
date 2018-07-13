@@ -50,6 +50,7 @@ public class CameraGLSurfaceView extends GLSurfaceView{
 
     public CameraGLSurfaceView(Context context, AttributeSet attributes) {
         super ( context, attributes);
+        Log.d("qws","view");
         mAttributes = attributes;
     }
 

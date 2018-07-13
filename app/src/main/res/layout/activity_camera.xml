@@ -21,13 +21,14 @@
             android:layout_alignParentStart="true"
             android:layout_alignParentTop="true"
             androidglescamera2:syncPreviewAndImageProcess="false"
-            androidglescamera2:desiredWidth="1280"
-            androidglescamera2:desiredHeight="960"/>
+            androidglescamera2:desiredWidth="1920"
+            androidglescamera2:desiredHeight="1440"/>
 
         <TextView
             android:id="@+id/show_result"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:textColor="@color/green"/>
         <Button
             android:layout_width="0dp"
             android:layout_height="0dp"

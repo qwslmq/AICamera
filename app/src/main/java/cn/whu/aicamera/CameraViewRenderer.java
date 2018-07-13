@@ -70,6 +70,7 @@ public class CameraViewRenderer implements GLSurfaceView.Renderer, SurfaceTextur
     private Size mPreviewSize = null;
 
     CameraViewRenderer(CameraGLSurfaceView view, CameraHandler cameraHandler) {
+        Log.d("qws","render");
         mSurfaceView = view;
         mCameraHandler = cameraHandler;
 
