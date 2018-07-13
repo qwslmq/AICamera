@@ -140,8 +140,8 @@ public class CameraHandler {
                         Log.i("mr", String.format("mPreviewSize %d x %d", psize.getWidth(), psize.getHeight()));
                     }
                 }
-                mCaptureReader = ImageReader.newInstance(mPreviewSize.getWidth(), mPreviewSize.getHeight(), ImageFormat.JPEG, 2);
-                mCaptureReader.setOnImageAvailableListener(mOnImageAvailableListener,mRecognitionHandler);
+                /*mCaptureReader = ImageReader.newInstance(mPreviewSize.getWidth(), mPreviewSize.getHeight(), ImageFormat.JPEG, 2);
+                mCaptureReader.setOnImageAvailableListener(mOnImageAvailableListener,mRecognitionHandler);*/
                 break;
             }
         } catch ( CameraAccessException e ) {
@@ -158,7 +158,7 @@ public class CameraHandler {
         CameraManager manager = (CameraManager)contexst.getSystemService(Context.CAMERA_SERVICE);
         try {
             CameraCharacteristics characteristics = manager.getCameraCharacteristics(mCameraID);
-            if (!mCameraOpenCloseLock.tryAcquire(2500, TimeUnit.MILLISECONDS)) {
+            if (!mCameraOpenCloseLock.tryAcquire(5000, TimeUnit.MILLISECONDS)) {
                 throw new RuntimeException("Time out waiting to lock camera opening.");
             }
             manager.openCamera(mCameraID,mStateCallback,mBackgroundHandler);
@@ -223,6 +223,9 @@ public class CameraHandler {
             mSurfaceTexture.setDefaultBufferSize(mPreviewSize.getWidth(), mPreviewSize.getHeight());
             final Surface surface = new Surface(mSurfaceTexture);
             mPreviewRequestBuilder.addTarget(surface);
+            mCaptureReader = ImageReader.newInstance(mPreviewSize.getWidth(), mPreviewSize.getHeight(), ImageFormat.JPEG, 2);
+            mCaptureReader.setOnImageAvailableListener(mOnImageAvailableListener,mRecognitionHandler);
+            mPreviewRequestBuilder.addTarget(mCaptureReader.getSurface());
 
             mCameraDevice.createCaptureSession(Arrays.asList(surface, mCaptureReader.getSurface()),
                     new CameraCaptureSession.StateCallback() {
@@ -306,7 +309,7 @@ public class CameraHandler {
             //停止连续取景
             mCaptureSession.stopRepeating();
             //捕获静态图像
-            mCaptureSession.capture(captureRequestBuilder.build(), captureCallback, mBackgroundHandler);
+            mCaptureSession.capture(captureRequestBuilder.build(), captureCallback, mRecognitionHandler);
         } catch (CameraAccessException e) {
             e.printStackTrace();
         }
