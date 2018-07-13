@@ -17,6 +17,7 @@ import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.Image;
 import android.media.ImageReader;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -26,6 +27,9 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -38,7 +42,7 @@ import java.util.Arrays;
 import cn.whu.aicamera.character_recognition.CharacterRecognition;
 import cn.whu.object_recognition.ObjectRecognition;
 
-public class CameraActivity extends FragmentActivity implements PermissionsHelper.PermissionsListener{
+public class CameraActivity extends FragmentActivity implements PermissionsHelper.PermissionsListener {
     private static final String TAG = CameraActivity.class.getSimpleName();
     private CameraGLSurfaceView mCameraGLSurfaceView;
     private PermissionsHelper mPermissionsHelper;
@@ -50,7 +54,7 @@ public class CameraActivity extends FragmentActivity implements PermissionsHelpe
 
     private static final int FACE_RECOGNITION = 0;
     private static final int CHARACTER_RECOGNITION = 1;
-    private static final int OBJECT_RECOGNITION =3;
+    private static final int OBJECT_RECOGNITION = 3;
     private String mRecognitionResult = null;
     private TextView mTextView;
     byte[] bytes;
@@ -67,7 +71,7 @@ public class CameraActivity extends FragmentActivity implements PermissionsHelpe
             mBackgroundHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    switch (mRecognitionOption){
+                    switch (mRecognitionOption) {
                         case FACE_RECOGNITION:
                             mRecognitionResult = FaceRecognition.recognize(bytes);
                             break;
@@ -92,32 +96,27 @@ public class CameraActivity extends FragmentActivity implements PermissionsHelpe
     };
 
     @Override
-    public void onCreate ( Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
+        Log.d("qws", "activity");
         super.onCreate(savedInstanceState);
-        /*requestWindowFeature(Window.FEATURE_NO_TITLE);
-        int ui = getWindow().getDecorView().getSystemUiVisibility();
-        ui = ui | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
-        getWindow().getDecorView().setSystemUiVisibility(ui);
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON, WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);*/
-
-        setContentView ( R.layout.activity_camera );
-
-        if(PermissionsHelper.isMorHigher())
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        setContentView(R.layout.activity_camera);
+        if (PermissionsHelper.isMorHigher())
             setupPermissions();
 
         initView();
     }
 
-    private void initView(){
+    private void initView() {
         mCameraGLSurfaceView = (CameraGLSurfaceView) findViewById(R.id.cameraGLSurfaceView);
         mCameraGLSurfaceView.init(this, mOnImageAvailableListener);
-        mTextView =(TextView)findViewById(R.id.show_result);
+        mTextView = (TextView) findViewById(R.id.show_result);
         final DrawerLayout drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-        NavigationView mNavigationView=(NavigationView)findViewById(R.id.nav_view);
+        NavigationView mNavigationView = (NavigationView) findViewById(R.id.nav_view);
         mNavigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                switch (item.getItemId()){
+                switch (item.getItemId()) {
                     case R.id.change_camera_facing:
                         mCameraGLSurfaceView.setCameraFacing();
                         drawerLayout.closeDrawers();
@@ -151,7 +150,7 @@ public class CameraActivity extends FragmentActivity implements PermissionsHelpe
     }
 
     //跳转至ar界面
-    private void startAr(){
+    private void startAr() {
         Intent intent = new Intent(CameraActivity.this, StartActivity.class);
         startActivity(intent);
 
@@ -160,11 +159,15 @@ public class CameraActivity extends FragmentActivity implements PermissionsHelpe
     @Override
     protected void onResume() {
         super.onResume();
+        int ui = getWindow().getDecorView().getSystemUiVisibility();
+        ui = ui | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+        getWindow().getDecorView().setSystemUiVisibility(ui);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON, WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         mCameraGLSurfaceView.onResume();
         startBackgroundThread();
 
-        if(PermissionsHelper.isMorHigher() && !mPermissionsSatisfied) {
-            if(!mPermissionsHelper.checkPermissions())
+        if (PermissionsHelper.isMorHigher() && !mPermissionsSatisfied) {
+            if (!mPermissionsHelper.checkPermissions())
                 return;
             else
                 mPermissionsSatisfied = true; //extra helper as callback sometimes isnt quick enough for future results
