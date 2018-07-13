@@ -1,23 +1,9 @@
 package cn.whu.aicamera;
 
 import android.Manifest;
-import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.graphics.ImageFormat;
-import android.graphics.SurfaceTexture;
-import android.hardware.camera2.CameraAccessException;
-import android.hardware.camera2.CameraCaptureSession;
-import android.hardware.camera2.CameraCharacteristics;
-import android.hardware.camera2.CameraDevice;
-import android.hardware.camera2.CameraManager;
-import android.hardware.camera2.CaptureRequest;
-import android.hardware.camera2.TotalCaptureResult;
-import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.Image;
 import android.media.ImageReader;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -39,13 +25,14 @@ import com.example.face_recognition.FaceRecognition;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
+import cn.whu.aicamera.Utils.PermissionsUtil;
 import cn.whu.aicamera.character_recognition.CharacterRecognition;
 import cn.whu.object_recognition.ObjectRecognition;
 
-public class CameraActivity extends FragmentActivity implements PermissionsHelper.PermissionsListener {
+public class CameraActivity extends FragmentActivity implements PermissionsUtil.PermissionsListener {
     private static final String TAG = CameraActivity.class.getSimpleName();
     private CameraGLSurfaceView mCameraGLSurfaceView;
-    private PermissionsHelper mPermissionsHelper;
+    private PermissionsUtil mPermissionsUtil;
     private boolean mPermissionsSatisfied = false;
     private int mRecognitionOption = OBJECT_RECOGNITION;
 
@@ -101,7 +88,7 @@ public class CameraActivity extends FragmentActivity implements PermissionsHelpe
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_camera);
-        if (PermissionsHelper.isMorHigher())
+        if (PermissionsUtil.isMorHigher())
             setupPermissions();
 
         initView();
@@ -166,8 +153,8 @@ public class CameraActivity extends FragmentActivity implements PermissionsHelpe
         mCameraGLSurfaceView.onResume();
         startBackgroundThread();
 
-        if (PermissionsHelper.isMorHigher() && !mPermissionsSatisfied) {
-            if (!mPermissionsHelper.checkPermissions())
+        if (PermissionsUtil.isMorHigher() && !mPermissionsSatisfied) {
+            if (!mPermissionsUtil.checkPermissions())
                 return;
             else
                 mPermissionsSatisfied = true; //extra helper as callback sometimes isnt quick enough for future results
@@ -200,8 +187,8 @@ public class CameraActivity extends FragmentActivity implements PermissionsHelpe
     }
 
     private void setupPermissions() {
-        mPermissionsHelper = PermissionsHelper.attach(this);
-        mPermissionsHelper.setRequestedPermissions(
+        mPermissionsUtil = PermissionsUtil.attach(this);
+        mPermissionsUtil.setRequestedPermissions(
                 Manifest.permission.CAMERA
         );
     }

@@ -1,4 +1,4 @@
-package cn.whu.aicamera;
+package cn.whu.aicamera.Utils;
 
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -20,19 +20,19 @@ import java.util.Arrays;
  * https://plus.google.com/+JoshBrown42/posts/FzNghPbKk2s
  *
  */
-public class PermissionsHelper extends Fragment {
+public class PermissionsUtil extends Fragment {
 
-    private static final String TAG = PermissionsHelper.class.getCanonicalName();
+    private static final String TAG = PermissionsUtil.class.getCanonicalName();
     private static final int PERMISSION_REQUEST_CODE = 100;
 
-    private static PermissionsHelper __instance;
+    private static PermissionsUtil __instance;
     private String[] mPermissions = null;
 
-    public static PermissionsHelper getInstance()
+    public static PermissionsUtil getInstance()
     {
         if(__instance == null)
         {
-            __instance = new PermissionsHelper();
+            __instance = new PermissionsUtil();
             __instance.setRetainInstance(true);
         }
         return __instance;
@@ -103,16 +103,16 @@ public class PermissionsHelper extends Fragment {
         return Build.VERSION.SDK_INT >= 23; //Build.VERSION_CODES.M
     }
 
-    public static <ParentFrag extends Fragment & PermissionsListener> PermissionsHelper attach(ParentFrag parent) {
+    public static <ParentFrag extends Fragment & PermissionsListener> PermissionsUtil attach(ParentFrag parent) {
         return attach(parent.getChildFragmentManager());
     }
 
-    public static <ParentActivity extends FragmentActivity & PermissionsListener> PermissionsHelper attach(ParentActivity parent) {
+    public static <ParentActivity extends FragmentActivity & PermissionsListener> PermissionsUtil attach(ParentActivity parent) {
         return attach(parent.getSupportFragmentManager());
     }
 
-    private static PermissionsHelper attach(FragmentManager fragmentManager) {
-        PermissionsHelper frag = (PermissionsHelper) fragmentManager.findFragmentByTag(TAG);
+    private static PermissionsUtil attach(FragmentManager fragmentManager) {
+        PermissionsUtil frag = (PermissionsUtil) fragmentManager.findFragmentByTag(TAG);
         if (frag == null) {
             frag = getInstance();
             fragmentManager.beginTransaction().add(frag, TAG).commit();

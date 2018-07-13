@@ -1,6 +1,7 @@
 package cn.whu.object_recognition;
 
 import com.baidu.aip.imageclassify.AipImageClassify;
+import com.google.gson.Gson;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -8,25 +9,33 @@ import org.json.JSONObject;
 import java.util.HashMap;
 
 public class ObjectRecognition {
-    public static final String APP_ID = "11476931";
-    public static final String API_KEY = "TNV6j00ik0BaosonghYdcpGq";
-    public static final String SECRET_KEY = "v7IjM7AVx26xOtYZ6qtGBhBNb1W0a2UZ";
+    private static final String APP_ID = "11535230";
+    private static final String API_KEY = "CkKeeheRmK1lRLtEg1qRITIB";
+    private static final String SECRET_KEY = "QZpCPGxpfwMWzbEV7fdoUQPBwg4qMQlW";
+    private static AipImageClassify client = new AipImageClassify(APP_ID, API_KEY, SECRET_KEY);
 
-    public static String recognize(byte[] bytes){
-        AipImageClassify client = new AipImageClassify(APP_ID, API_KEY, SECRET_KEY);
+    public static String recognize(byte[] bytes) {
         // 可选：设置网络连接参数
         client.setConnectionTimeoutInMillis(2000);
         client.setSocketTimeoutInMillis(60000);
-
         HashMap<String, String> options = new HashMap<>();
-        options.put("top_num","3");
         JSONObject res = client.advancedGeneral(bytes, options);
-        String result = null;
+        Gson gson = new Gson();
+        String results = "";
         try {
-            result = res.toString(2);
+            Response response = gson.fromJson(res.toString(), Response.class);
+            if (response.getResult() == null) results = res.getString("error_msg");
+            else {
+                StringBuilder sb = new StringBuilder();
+                for (Response.Result result : response.getResult()) {
+                    if (result.getScore() > 0.5)
+                        sb.append(result.getRoot() + " " + result.getKeyword() + " " + result.getScore() + "\n");
+                }
+                results = sb.toString();
+            }
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        return result;
+        return results;
     }
 }
