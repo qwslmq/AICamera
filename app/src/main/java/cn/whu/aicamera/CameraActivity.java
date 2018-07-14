@@ -30,6 +30,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -57,6 +58,7 @@ public class CameraActivity extends FragmentActivity implements PermissionsHelpe
     private static final int OBJECT_RECOGNITION = 3;
     private String mRecognitionResult = null;
     private TextView mTextView;
+    private ImageButton switchCamera;
     byte[] bytes;
 
     private ImageReader.OnImageAvailableListener mOnImageAvailableListener = new ImageReader.OnImageAvailableListener() {
@@ -110,17 +112,20 @@ public class CameraActivity extends FragmentActivity implements PermissionsHelpe
     private void initView() {
         mCameraGLSurfaceView = (CameraGLSurfaceView) findViewById(R.id.cameraGLSurfaceView);
         mCameraGLSurfaceView.init(this, mOnImageAvailableListener);
+        switchCamera = findViewById(R.id.switch_camera);
         mTextView = (TextView) findViewById(R.id.show_result);
         final DrawerLayout drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        switchCamera.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mCameraGLSurfaceView.setCameraFacing();
+            }
+        });
         NavigationView mNavigationView = (NavigationView) findViewById(R.id.nav_view);
         mNavigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                 switch (item.getItemId()) {
-                    case R.id.change_camera_facing:
-                        mCameraGLSurfaceView.setCameraFacing();
-                        drawerLayout.closeDrawers();
-                        break;
                     case R.id.face_recognition:
                         Toast.makeText(CameraActivity.this, R.string.face_recognition, Toast.LENGTH_SHORT).show();
                         mRecognitionOption = FACE_RECOGNITION;

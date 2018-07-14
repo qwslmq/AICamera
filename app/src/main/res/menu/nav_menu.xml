@@ -2,9 +2,6 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <group android:checkableBehavior="single">
         <item
-            android:id="@+id/change_camera_facing"
-            android:title="@string/change_camera_facing"/>
-        <item
             android:id="@+id/face_recognition"
             android:title="@string/face_recognition" />
         <item
