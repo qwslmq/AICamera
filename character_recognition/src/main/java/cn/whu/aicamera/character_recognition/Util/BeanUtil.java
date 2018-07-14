@@ -44,4 +44,11 @@ public class BeanUtil {
         }
         return stringBuilder.toString();
     }
+    public static String getWordsWithLocationInJson(List<Words_result> words_results){
+        for(Words_result words_result : words_results){
+            words_result.setProbability(null);
+        }
+        return JSONArray.toJSONString(words_results);
+    }
+
 }

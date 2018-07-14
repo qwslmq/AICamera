@@ -25,7 +25,7 @@ public class CharacterRecognition {
      * 静态client对象，实现单例模式
      */
     public static AipOcr client;
-    public static int MaxResult = 5;
+    public static int MaxResult = 10;
     /**
      * 文字识别默认接口，默认为通用文字识别，无位置信息，普通精度，根据置信度进行筛选
      * @param bytes 图片的byte数组
@@ -77,7 +77,7 @@ public class CharacterRecognition {
         options.put("detect_direction", "true");
         options.put("detect_language", "true");
         options.put("probability", "true");
-        return getProbabilityFliterResult(client.basicGeneral(bytes,options).toString(),MaxResult);
+        return getProbabilityFliterWords(client.basicGeneral(bytes,options).toString(),MaxResult);
     }
 
     /**
@@ -95,7 +95,7 @@ public class CharacterRecognition {
         options.put("detect_language", "true");
         options.put("probability", "true");
         //调用接口
-        return getProbabilityFliterResult(client.general(bytes,options).toString(),MaxResult);
+        return getProbabilityFliterWordsWithLocation(client.general(bytes,options).toString(),MaxResult);
     }
     /**
      * 通用文字识别高精度版，不含位置信息
@@ -109,7 +109,7 @@ public class CharacterRecognition {
         options.put("detect_direction", "true");
         options.put("probability", "true");
         //调用接口
-        return getProbabilityFliterResult(client.basicAccurateGeneral(bytes,options).toString(),MaxResult);
+        return getProbabilityFliterWords(client.basicAccurateGeneral(bytes,options).toString(),MaxResult);
     }
 
     /**
@@ -125,7 +125,7 @@ public class CharacterRecognition {
         options.put("detect_direction", "true");
         options.put("probability", "true");
         //调用接口
-        return getProbabilityFliterResult(client.accurateGeneral(bytes,options).toString(),MaxResult);
+        return getProbabilityFliterWordsWithLocation(client.accurateGeneral(bytes,options).toString(),MaxResult);
     }
 
     /**
@@ -134,9 +134,21 @@ public class CharacterRecognition {
      * @param maxResult 最大返回字段数
      * @return 筛选后的结果，仅包含文字
      */
-    public static String getProbabilityFliterResult(String originResult, int maxResult){
+    public static String getProbabilityFliterWords(String originResult, int maxResult){
         OcrGeneralPositionResult resultBean = BeanUtil.toGPResultObject(originResult);
         List<Words_result> words_results = resultBean.getWords_result();
         return BeanUtil.getWords(FliterUtil.FliterByProbability(words_results,maxResult));
+    }
+
+    /**
+     * 根据置信度对返回结果进行筛选，按Average置信度进行排序，选取不超过最大返回字段数的多个结果对象List生成的json对象,包含字段和位置信息。
+     * @param originResult 初始识别生成的结果字符串，json格式
+     * @param maxResult 最大返回字段数
+     * @return 筛选后的结果，json格式，包含字段和位置信息
+     */
+    public static String getProbabilityFliterWordsWithLocation(String originResult, int maxResult){
+        OcrGeneralPositionResult resultBean = BeanUtil.toGPResultObject(originResult);
+        List<Words_result> words_results = resultBean.getWords_result();
+        return BeanUtil.getWordsWithLocationInJson(FliterUtil.FliterByProbability(words_results,maxResult));
     }
 }
