@@ -23,7 +23,7 @@ public class CharacterRecognitionTest {
     @Test
     public void recognize() {
         byte[] file = fileToBytes("D:\\test3\\AICamera\\character_recognition\\src\\test\\java\\cn\\whu\\aicamera\\character_recognition\\OCRTest2.png");
-        String result = CharacterRecognition.recognize(file);
+        String result = CharacterRecognition.recognize(file,CharacterRecognition.GENERAL);
         System.out.println(result);
     }
     public static byte[] fileToBytes(String filePath) {
