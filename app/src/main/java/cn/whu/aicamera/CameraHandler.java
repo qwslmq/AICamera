@@ -66,8 +66,6 @@ public class CameraHandler {
 
     private HandlerThread mBackgroundThread;
     private Handler mBackgroundHandler;
-    private HandlerThread mRecognitionThread;
-    private Handler mRecognitionHandler;
     private Semaphore mCameraOpenCloseLock = new Semaphore(1);
 
     private ImageReader mCaptureReader;
@@ -92,7 +90,7 @@ public class CameraHandler {
         @Override
         public void run() {
             takePicture();
-            mRecognitionHandler.postDelayed(this, 2000);
+            mBackgroundHandler.postDelayed(this, 2000);
         }
     };
 
@@ -113,7 +111,7 @@ public class CameraHandler {
         return dY * dY + dX * dX;
     }
 
-    void calcPreviewSize(Context context, boolean is_front) {
+    void initCamera(Context context, boolean is_front) {
         isFront = is_front;
         int lens_facing = CameraCharacteristics.LENS_FACING_FRONT;
         if(!isFront) lens_facing = CameraCharacteristics.LENS_FACING_BACK;
@@ -145,17 +143,17 @@ public class CameraHandler {
                 break;
             }
         } catch ( CameraAccessException e ) {
-            Log.e("mr", "calcPreviewSize - Camera Access Exception");
+            Log.e("mr", "initCamera - Camera Access Exception");
         } catch ( IllegalArgumentException e ) {
-            Log.e("mr", "calcPreviewSize - Illegal Argument Exception");
+            Log.e("mr", "initCamera - Illegal Argument Exception");
         } catch ( SecurityException e ) {
-            Log.e("mr", "calcPreviewSize - Security Exception");
+            Log.e("mr", "initCamera - Security Exception");
         }
         Log.i("mr", "camera size had to be chosen");
     }
 
-    void openCamera(Context contexst) {
-        CameraManager manager = (CameraManager)contexst.getSystemService(Context.CAMERA_SERVICE);
+    void openCamera() {
+        CameraManager manager = (CameraManager)context.getSystemService(Context.CAMERA_SERVICE);
         try {
             CameraCharacteristics characteristics = manager.getCameraCharacteristics(mCameraID);
             if (!mCameraOpenCloseLock.tryAcquire(5000, TimeUnit.MILLISECONDS)) {
@@ -219,12 +217,12 @@ public class CameraHandler {
     protected void createCameraPreviewSession() {
         try {
             mPreviewRequestBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
-
-            mSurfaceTexture.setDefaultBufferSize(mPreviewSize.getWidth(), mPreviewSize.getHeight());
+            Log.d("qws",""+mPreviewSize.getWidth()+"  "+mPreviewSize.getHeight());
+            mSurfaceTexture.setDefaultBufferSize(mPreviewSize.getWidth()*2, mPreviewSize.getHeight()*2);
             final Surface surface = new Surface(mSurfaceTexture);
             mPreviewRequestBuilder.addTarget(surface);
             mCaptureReader = ImageReader.newInstance(mPreviewSize.getWidth(), mPreviewSize.getHeight(), ImageFormat.JPEG, 2);
-            mCaptureReader.setOnImageAvailableListener(mOnImageAvailableListener,mRecognitionHandler);
+            mCaptureReader.setOnImageAvailableListener(mOnImageAvailableListener,mBackgroundHandler);
             mPreviewRequestBuilder.addTarget(mCaptureReader.getSurface());
 
             mCameraDevice.createCaptureSession(Arrays.asList(surface, mCaptureReader.getSurface()),
@@ -309,7 +307,7 @@ public class CameraHandler {
             //停止连续取景
             mCaptureSession.stopRepeating();
             //捕获静态图像
-            mCaptureSession.capture(captureRequestBuilder.build(), captureCallback, mRecognitionHandler);
+            mCaptureSession.capture(captureRequestBuilder.build(), captureCallback, mBackgroundHandler);
         } catch (CameraAccessException e) {
             e.printStackTrace();
         }
@@ -319,25 +317,16 @@ public class CameraHandler {
         mBackgroundThread = new HandlerThread("CameraBackground");
         mBackgroundThread.start();
         mBackgroundHandler = new Handler(mBackgroundThread.getLooper());
-        mRecognitionThread = new HandlerThread("RecognitionBackground");
-        mRecognitionThread.start();
-        mRecognitionHandler = new Handler(mRecognitionThread.getLooper());
     }
 
     protected void stopBackgroundThread() {
         mBackgroundThread.quitSafely();
-        mRecognitionThread.quitSafely();
         try {
             mBackgroundThread.join();
             mBackgroundThread = null;
             mBackgroundHandler = null;
-            mRecognitionThread.join();
-            mRecognitionThread = null;
-            mRecognitionHandler = null;
         } catch (InterruptedException e) {
             Log.e("mr", "stopBackgroundThread");
         }
     }
-
-
 }
