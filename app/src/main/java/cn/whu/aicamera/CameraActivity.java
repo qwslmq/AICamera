@@ -47,16 +47,19 @@ public class CameraActivity extends FragmentActivity implements PermissionsUtil.
     private TextView mTextView;
     private ImageButton switchCamera;
     byte[] bytes;
+    int index=0;
 
     private ImageReader.OnImageAvailableListener mOnImageAvailableListener = new ImageReader.OnImageAvailableListener() {
         @Override
         public void onImageAvailable(ImageReader reader) {
-            //获取捕获的照片数据
-            Image image = reader.acquireNextImage();
+            Image image = reader.acquireLatestImage();
             ByteBuffer buffer = image.getPlanes()[0].getBuffer();
             bytes = new byte[buffer.remaining()];
             buffer.get(bytes);
             image.close();
+            index =(++index)%30;
+            if(index != 0) return;
+            Log.d("qws",index+"");
             mBackgroundHandler.post(new Runnable() {
                 @Override
                 public void run() {

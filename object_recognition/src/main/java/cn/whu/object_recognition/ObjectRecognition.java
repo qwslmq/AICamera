@@ -28,7 +28,7 @@ public class ObjectRecognition {
             else {
                 StringBuilder sb = new StringBuilder();
                 for (Response.Result result : response.getResult()) {
-                    if (result.getScore() > 0.5)
+                    if (result.getScore() > 0.2)
                         sb.append(result.getRoot() + " " + result.getKeyword() + " " + result.getScore() + "\n");
                 }
                 results = sb.toString();

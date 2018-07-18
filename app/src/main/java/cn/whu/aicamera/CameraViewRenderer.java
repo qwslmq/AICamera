@@ -7,7 +7,6 @@ import android.graphics.Point;
 import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
 import android.hardware.SensorManager;
-import android.hardware.camera2.CameraCharacteristics;
 import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
@@ -22,25 +21,27 @@ import cn.whu.aicamera.CameraGLSurfaceView.ScaleType;
 import cn.whu.aicamera.Utils.BufferUtil;
 import cn.whu.aicamera.Utils.ShaderUtils;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 
 import javax.microedition.khronos.opengles.GL10;
 
 public class CameraViewRenderer implements GLSurfaceView.Renderer, SurfaceTexture.OnFrameAvailableListener {
     private static final String TAG = CameraViewRenderer.class.getSimpleName();
-    private int[] hTex;
+    private int[] textureId;
     private FloatBuffer pVertex;
     private FloatBuffer pTexCoordFront;
     private FloatBuffer pTexCoordBack;
-    private int hProgram;
+    private int programID;
     private boolean isFront = true;
 
     private boolean mGLInit = false;
     private boolean mUpdateSurfaceTexture = false;
 
-    private float[] mTexRotateMatrix = new float[]{1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};
+    private float[] mTexRotateMatrix = new float[]{
+            1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1};
 
     private CameraGLSurfaceView mSurfaceView;
     private CameraHandler mCameraHandler;
@@ -56,7 +57,7 @@ public class CameraViewRenderer implements GLSurfaceView.Renderer, SurfaceTextur
         mSurfaceView = view;
         mCameraHandler = cameraHandler;
 
-        float[] vtmp = {
+        float[] vertex = {
                 -1.0f, -1.0f,   // 0 bottom left   A
                 1.0f, -1.0f,   // 1 bottom right  B
                 -1.0f, 1.0f,   // 2 top left      C
@@ -77,7 +78,7 @@ public class CameraViewRenderer implements GLSurfaceView.Renderer, SurfaceTextur
                 0.0f, 1.0f,     // 2 top left
         };
 
-        pVertex = BufferUtil.convertToFloatBuffer(vtmp);
+        pVertex = BufferUtil.convertToFloatBuffer(vertex);
         pTexCoordFront = BufferUtil.convertToFloatBuffer(ttmp_front);
         pTexCoordBack = BufferUtil.convertToFloatBuffer(ttmp_back);
 
@@ -128,7 +129,7 @@ public class CameraViewRenderer implements GLSurfaceView.Renderer, SurfaceTextur
     @Override
     public void onSurfaceCreated(GL10 unused, javax.microedition.khronos.egl.EGLConfig eglConfig) {
         initTex();
-        mSurfaceTexture = new SurfaceTexture(hTex[0]);
+        mSurfaceTexture = new SurfaceTexture(textureId[0]);
         mSurfaceTexture.setDefaultBufferSize(mPreviewSize.getWidth(), mPreviewSize.getHeight());
         mSurfaceTexture.setOnFrameAvailableListener(this);
 
@@ -137,7 +138,7 @@ public class CameraViewRenderer implements GLSurfaceView.Renderer, SurfaceTextur
         GLES20.glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // Clear white
         checkGlError("glClearColor");
 
-        hProgram = ShaderUtils.createProgram(mSurfaceView.getContext(), "vertex_texture.glsl", "fragment_texture.glsl");
+        programID = ShaderUtils.createProgram(mSurfaceView.getContext(), "vertex_texture.glsl", "fragment_texture.glsl");
 
         mCameraHandler.openCamera();
 
@@ -147,11 +148,11 @@ public class CameraViewRenderer implements GLSurfaceView.Renderer, SurfaceTextur
     }
 
     private void initTex() {
-        hTex = new int[1];
-        GLES20.glGenTextures(1, hTex, 0);
+        textureId = new int[1];
+        GLES20.glGenTextures(1, textureId, 0);
         checkGlError("glGenTextures");
 
-        GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, hTex[0]);
+        GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, textureId[0]);
         checkGlError("glBindTexture");
 
         GLES20.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
@@ -182,40 +183,40 @@ public class CameraViewRenderer implements GLSurfaceView.Renderer, SurfaceTextur
             }
         }
 
-        GLES20.glUseProgram(hProgram);
+        GLES20.glUseProgram(programID);
         checkGlError("glUseProgram");
 
-        int trmh = GLES20.glGetUniformLocation(hProgram, "uTexRotateMatrix");
+        int trmh = GLES20.glGetUniformLocation(programID, "uTexRotateMatrix");
         checkGlError("glGetUniformLocation");
 
         GLES20.glUniformMatrix4fv(trmh, 1, false, mTexRotateMatrix, 0);
         checkGlError("glUniformMatrix4fv");
 
-        int ph = GLES20.glGetAttribLocation(hProgram, "vPosition");
+        int vPositionLocation = GLES20.glGetAttribLocation(programID, "vPosition");
         checkGlError("glGetAttribLocation");
 
-        int tch = GLES20.glGetAttribLocation(hProgram, "vTexCoord");
+        int vTecCoordLocation = GLES20.glGetAttribLocation(programID, "vTexCoord");
         checkGlError("glGetAttribLocation");
 
-        GLES20.glVertexAttribPointer(ph, 2, GLES20.GL_FLOAT, false, 4 * 2, pVertex);
+        GLES20.glVertexAttribPointer(vPositionLocation, 2, GLES20.GL_FLOAT, false, 4 * 2, pVertex);
         checkGlError("glVertexAttribPointer");
 
-        GLES20.glVertexAttribPointer(tch, 2, GLES20.GL_FLOAT, false, 4 * 2, isFront ? pTexCoordFront : pTexCoordBack);
+        GLES20.glVertexAttribPointer(vTecCoordLocation, 2, GLES20.GL_FLOAT, false, 4 * 2, isFront ? pTexCoordFront : pTexCoordBack);
         checkGlError("glVertexAttribPointer");
 
-        GLES20.glEnableVertexAttribArray(ph);
+        GLES20.glEnableVertexAttribArray(vPositionLocation);
         checkGlError("glEnableVertexAttribArray");
 
-        GLES20.glEnableVertexAttribArray(tch);
+        GLES20.glEnableVertexAttribArray(vTecCoordLocation);
         checkGlError("glEnableVertexAttribArray");
 
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
         checkGlError("glActiveTexture");
 
-        GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, hTex[0]);
+        GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, textureId[0]);
         checkGlError("glBindTexture");
 
-        GLES20.glUniform1i(GLES20.glGetUniformLocation(hProgram, "sTexture"), 0);
+        GLES20.glUniform1i(GLES20.glGetUniformLocation(programID, "sTexture"), 0);
         checkGlError("glUniform1i");
 
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
